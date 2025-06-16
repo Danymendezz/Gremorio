@@ -1,0 +1,367 @@
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital,wght@0,400;1,400&family=Cinzel:wght@400;600;700&family=Spectral:wght@300;400;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 40% 5%; 
+  --foreground: 220 20% 95%; 
+  --card: 220 30% 10%; 
+  --card-foreground: 220 20% 90%;
+  --popover: 220 30% 8%;
+  --popover-foreground: 220 20% 90%;
+  --primary: 260 70% 65%; 
+  --primary-foreground: 220 10% 98%;
+  --secondary: 220 20% 20%; 
+  --secondary-foreground: 220 15% 85%;
+  --muted: 220 20% 15%;
+  --muted-foreground: 220 15% 60%;
+  --accent: 260 60% 55%; 
+  --accent-foreground: 220 10% 98%;
+  --destructive: 350 70% 55%; 
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 20% 25%; 
+  --input: 220 25% 18%; 
+  --ring: 260 70% 70%; 
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  background-image: 
+    radial-gradient(ellipse at top left, hsla(240,50%,30%,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at bottom right, hsla(260,60%,40%,0.25) 0%, transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath opacity='.5' d='M16.5 16.5l-.939-.346.346-.939L16.5 16.5zm3.182 14.818l.346.939.939-.346-.346-.939L19.682 31.318zm14.818 3.182l.939.346-.346.939-.939-.346L34.5 34.5zm-3.182-14.818l-.346-.939-.939.346.346.939L31.318 19.682zM40 0l-.939.346.939.346L40 0zm0 80l.939-.346-.939-.346L40 80zM0 40l.346.939.346-.939L0 40zm80 40l-.346-.939-.346.939L80 40zM20 20a20 20 0 1 0 40 0 20 20 0 0 0-40 0zM1.5 39.5a.5.5 0 0 0-.5.5.5.5 0 0 0 .5.5V39.5zm77 0a.5.5 0 0 0 .5-.5.5.5 0 0 0-.5-.5V39.5zm-39.5-38a.5.5 0 0 0-.5-.5.5.5 0 0 0 .5.5V1.5zm0 77a.5.5 0 0 0 .5.5.5.5 0 0 0-.5-.5V78.5z'/%3E%3Ccircle cx='40' cy='40' r='2'/%3E%3Ccircle cx='10' cy='10' r='1'/%3E%3Ccircle cx='70' cy='10' r='1'/%3E%3Ccircle cx='10' cy='70' r='1'/%3E%3Ccircle cx='70' cy='70' r='1'/%3E%3Ccircle cx='25' cy='55' r='1.5'/%3E%3Ccircle cx='55' cy='25' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  color: hsl(var(--foreground));
+  font-family: 'Spectral', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.book-cover {
+  background: linear-gradient(145deg, hsl(220,30%,8%) 0%, hsl(220,40%,3%) 50%, hsl(220,35%,12%) 100%);
+  box-shadow: 
+    inset 0 0 60px hsla(0,0%,0%,0.9),
+    0 25px 50px hsla(0,0%,0%,0.95),
+    0 0 120px hsla(260, 70%, 50%, 0.3);
+  border: 3px solid hsl(var(--primary) / 0.6);
+  position: relative;
+}
+
+.book-cover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 15% 25%, hsla(var(--primary), 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 85% 75%, hsla(var(--accent), 0.2) 0%, transparent 40%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.golden-text { 
+  background: linear-gradient(135deg, hsl(220,30%,90%) 0%, hsl(220,20%,70%) 50%, hsl(220,30%,95%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 15px hsla(var(--foreground), 0.6);
+  filter: drop-shadow(1px 1px 3px hsla(var(--background), 0.7));
+}
+
+.blood-stain { 
+  background: radial-gradient(circle, hsla(var(--accent), 0.5) 0%, hsla(var(--primary), 0.3) 50%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0.8;
+  box-shadow: 0 0 10px hsla(var(--accent), 0.5);
+}
+
+.mystical-symbol {
+  color: hsl(var(--accent));
+  text-shadow: 0 0 12px hsla(var(--accent), 0.7);
+  filter: drop-shadow(0 0 6px hsla(var(--accent), 0.4));
+}
+
+.parchment { 
+  background-color: hsl(220, 25%, 12%); 
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(circle at 20% 30%, hsla(var(--primary), 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 80% 70%, hsla(var(--accent), 0.06) 0%, transparent 60%),
+    linear-gradient(to bottom, hsla(var(--background),0.1) 0%, hsla(var(--card),0.1) 100%);
+  box-shadow: 
+    inset 0 0 50px hsla(var(--background), 0.5),
+    0 10px 30px hsla(0,0%,0%,0.6);
+  border: 2px solid hsl(var(--border));
+  position: relative;
+  border-radius: 6px;
+  color: hsl(var(--foreground));
+}
+
+.parchment::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 25px,
+      hsla(var(--foreground), 0.02) 25px,
+      hsla(var(--foreground), 0.02) 26px
+    );
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.5;
+}
+
+.manuscript-text {
+  font-family: 'Spectral', serif;
+  color: hsl(var(--foreground));
+  line-height: 1.8;
+  text-shadow: 1px 1px 2px hsla(var(--background), 0.3);
+  white-space: pre-wrap; 
+}
+
+.ornate-capital {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  float: left;
+  line-height: 0.85;
+  margin: 0 0.5em 0.1em 0;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 50%, hsl(var(--primary)/0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 1px 1px 2px hsla(var(--background), 0.5);
+}
+
+.post-it-antique { 
+  background: hsl(var(--primary)/0.7);
+  box-shadow: 
+    1px 1px 3px hsla(0,0%,0%,0.5),
+    inset 0 1px 0 hsla(var(--primary-foreground), 0.1);
+  border: 1px solid hsl(var(--primary)/0.9);
+  transform: rotate(-2.5deg);
+  transition: all 0.3s ease;
+  font-family: 'IM Fell English', serif;
+  backdrop-filter: blur(2px);
+}
+
+.post-it-antique:hover {
+  transform: rotate(0deg) scale(1.05);
+  z-index: 10;
+  box-shadow: 3px 3px 8px hsla(0,0%,0%,0.6);
+  background: hsl(var(--primary)/0.85);
+}
+
+.polaroid { 
+  background: hsl(var(--foreground));
+  padding: 8px 8px 28px 8px;
+  box-shadow: 
+    0 8px 16px hsla(0,0%,0%,0.5),
+    inset 0 1px 0 hsla(var(--background), 0.15);
+  transform: rotate(3.5deg);
+  transition: all 0.3s ease;
+  border: 1px solid hsl(var(--border));
+}
+
+.polaroid:hover {
+  transform: rotate(0deg) scale(1.1);
+  z-index: 10;
+}
+
+.corner-note {
+  position: absolute;
+  font-family: 'IM Fell English', serif;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.7;
+  transform: rotate(-5deg);
+  text-shadow: 1px 1px 1px hsla(var(--background),0.2);
+  padding: 4px;
+  line-height: 1.1;
+}
+.corner-note:hover {
+  color: hsl(var(--accent));
+  opacity: 1;
+}
+
+.book-spine {
+  background: linear-gradient(90deg, hsl(var(--primary)/0.5) 0%, hsl(var(--primary)/0.7) 50%, hsl(var(--primary)/0.5) 100%);
+  box-shadow: 
+    inset 0 0 15px hsla(0,0%,0%,0.6),
+    1px 0 8px hsla(0,0%,0%,0.4);
+}
+
+.lock-mechanism {
+  background: radial-gradient(circle, hsl(220,10%,30%) 0%, hsl(220,10%,15%) 70%);
+  border: 2px solid hsl(220,10%,10%);
+  box-shadow: 
+    0 3px 6px hsla(0,0%,0%,0.6),
+    inset 0 1px 2px hsla(var(--foreground), 0.05);
+}
+
+.chain-link {
+  background: linear-gradient(45deg, hsl(220,10%,25%) 0%, hsl(220,10%,40%) 50%, hsl(220,10%,25%) 100%);
+  border: 1px solid hsl(220,10%,10%);
+  box-shadow: 0 1px 2px hsla(0,0%,0%,0.4);
+}
+
+.admin-panel {
+  background: linear-gradient(135deg, hsl(220, 25%, 8%) 0%, hsl(220, 30%, 5%) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--card-foreground));
+}
+
+.admin-panel h1, .admin-panel h2, .admin-panel h3 {
+  color: hsl(var(--primary));
+  text-shadow: 1px 1px 2px hsla(var(--background),0.7);
+}
+
+.admin-panel label {
+  color: hsl(var(--accent));
+}
+
+.admin-panel input, .admin-panel textarea, .admin-panel select {
+  background-color: hsl(var(--input));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  border-radius: var(--radius);
+}
+.admin-panel input:focus, .admin-panel textarea:focus, .admin-panel select:focus {
+  background-color: hsl(var(--input)/0.8);
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+.admin-panel .content-editor {
+  background: hsl(var(--card) / 0.9);
+  border: 1px solid hsl(var(--border) / 0.7);
+  box-shadow: 0 8px 25px hsla(0,0%,0%,0.7);
+}
+
+.admin-panel .button-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+.admin-panel .button-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+.admin-panel .button-secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border-color: hsl(var(--border));
+}
+.admin-panel .button-secondary:hover {
+  background-color: hsl(var(--secondary) / 0.9);
+}
+
+.admin-panel .button-destructive {
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+.admin-panel .button-destructive:hover {
+  background-color: hsl(var(--destructive) / 0.9);
+}
+
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; 
+  padding: 0.5rem; 
+  background-color: hsl(var(--card) / 0.7);
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  backdrop-filter: blur(5px);
+}
+
+.audio-player button {
+  background-color: transparent;
+  border: none;
+  color: hsl(var(--primary));
+  cursor: pointer;
+  padding: 0.25rem; 
+}
+.audio-player button:hover {
+  color: hsl(var(--accent));
+}
+
+.audio-player input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 6px;
+  background: hsl(var(--input));
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.audio-player input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: hsl(var(--primary));
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.audio-player input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: hsl(var(--primary));
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.audio-player .time-display {
+  font-size: 0.75rem; 
+  color: hsl(var(--muted-foreground));
+  min-width: 70px; 
+  text-align: center;
+}
+
+.login-form-container {
+  background: linear-gradient(145deg, hsl(220,30%,12%) 0%, hsl(220,40%,8%) 100%);
+  border: 1px solid hsl(var(--primary) / 0.5);
+  box-shadow: 0 10px 30px hsla(0,0%,0%,0.7);
+}
+
+.login-form-container h1 {
+  color: hsl(var(--primary));
+  font-family: 'Cinzel', serif;
+}
+
+.login-form-container label {
+  color: hsl(var(--accent));
+}
+
+.login-form-container input {
+  background-color: hsl(var(--input));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+.login-form-container input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+.login-form-container button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+.login-form-container button:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
