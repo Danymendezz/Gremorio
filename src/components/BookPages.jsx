@@ -17,6 +17,10 @@ const formatTime = (time) => {
 };
 
 export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSize, navigateToChapter }) {
+  // Verificación al inicio
+  if (!bookData || !bookData.chapters) {
+    return <div>Cargando datos del libro...</div>; // O null, o un spinner
+  }
   const [isFlipping, setIsFlipping] = useState(false);
   const [historyStack, setHistoryStack] = useState([]);
   
