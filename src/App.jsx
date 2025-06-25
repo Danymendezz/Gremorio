@@ -45,9 +45,9 @@ function App() {
     const loadBookData = async () => {
       setIsLoading(true); // Inicia el estado de carga
       try {
-        const data = await getBookData();
+        const data = await getBookData(); // Esta API debe devolver title y author en data.finalMural
         setBookData(data);
-        toast({
+         toast({
            title: "✅ Datos cargados",
            description: "Datos del grimorio cargados exitosamente.",
          });
@@ -289,7 +289,8 @@ function App() {
             !isBookOpen ? (
               <motion.div key="cover" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.8, ease: "easeInOut" }} className="flex-grow flex items-center justify-center p-4 md:p-8">
                 {/* Pasa bookData a BookCover si lo necesita (ej. para el título y autor) */}
-                <BookCover title={bookData.title} author={bookData.author} onOpen={openBook} />
+                {/* MODIFICACIÓN: Pasa bookData.finalMural.title y bookData.finalMural.author a BookCover */}
+                <BookCover title={bookData?.finalMural?.title} author={bookData?.finalMural?.author} onOpen={openBook} /> {/* Usa optional chaining por si bookData o finalMural son null inicialmente */}
               </motion.div>
             ) : (
                // BookPages se renderiza condicionalmente fuera de las rutas
@@ -308,7 +309,7 @@ function App() {
                 allChapters={bookData.chapters} // Pasa todos los capítulos para los selectores de enlace
                 onSaveChapter={handleSaveChapter} // Pasa la función para guardar capítulo a AdminPanel
                 onDeleteChapter={handleDeleteChapter} // Pasa la función para eliminar capítulo
-                 onSaveMural={handleSaveMural} // Pasa la función para guardar mural
+                 onSaveMural={handleSaveMural} // Pasa la función para guardar mural (que ahora también guarda title/author)
               />
             ) : (
               <Navigate to="/login" />
@@ -324,12 +325,14 @@ function App() {
       {/* BookPages se renderiza fuera de las rutas para que pueda superponerse */}
       {isBookOpen && bookData && ( // Renderiza BookPages solo si isBookOpen es true y bookData está cargado
         <BookPages
-          bookData={bookData} // Pasa los datos cargados de la API
+          bookData={bookData} // Pasa los datos cargados de la API (incluyendo finalMural con title/author)
           currentPage={currentPage}
           onPageChange={setCurrentPage}
           onClose={closeBook}
           fontSize={fontSize} // Usa el estado fontSize
           navigateToChapter={navigateToChapter} // Pasa la función de navegación
+          // La prop 'author' ya no es necesaria si BookPages accede directamente a bookData.finalMural?.author
+          // author={bookData.finalMural?.author || ''}
         />
       )}
 

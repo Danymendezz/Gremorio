@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // <-- Añade useEffect aquí
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ChapterEditor } from '@/components/ChapterEditor';
@@ -7,49 +7,65 @@ import { BookOpen, Users, Plus, Edit, Trash2, Save, XCircle, Image } from 'lucid
 import { toast } from '@/components/ui/use-toast';
 
 // Asegúrate de importar las funciones de guardado/eliminación desde api.js si las manejas aquí
+// Las funciones onSaveChapter, onDeleteChapter y onSaveMural se pasan como props desde App.jsx,
+// pero onSaveMural es la que usaremos para guardar la información del libro.
 // import { saveChapter, deleteChapter, saveMural } from '@/components/api';
+
 
 export function AdminPanel({ bookData, onUpdateData, onClose, allChapters, onSaveChapter, onDeleteChapter, onSaveMural }) {
   const [activeTab, setActiveTab] = useState('chapters');
   const [editingChapter, setEditingChapter] = useState(null);
-  // Inicializa bookInfo con valores seguros si bookData es null o undefined inicialmente
+  // MODIFICACIÓN: Inicializa bookInfo accediendo a title y author dentro de finalMural
   const [bookInfo, setBookInfo] = useState({
-    title: bookData?.title || "",
-    author: bookData?.author || ""
+    title: bookData?.finalMural?.title || "",
+    author: bookData?.finalMural?.author || ""
   });
 
   // Efecto para actualizar bookInfo si bookData cambia (por ejemplo, después de cargar de la API)
   useEffect(() => {
+    // MODIFICACIÓN: Actualiza bookInfo accediendo a title y author dentro de finalMural
     setBookInfo({
-      title: bookData?.title || "",
-      author: bookData?.author || ""
+      title: bookData?.finalMural?.title || "",
+      author: bookData?.finalMural?.author || ""
     });
   }, [bookData]);
 
 
-  const handleSaveBookInfo = () => {
-    // Aquí, en lugar de onUpdateData, probablemente querrías una función de API para guardar la información del libro
-    // onUpdateBookInfo({ title: bookInfo.title, author: bookInfo.author }); // Ejemplo de función API
+  // handleSaveBookInfo para llamar a la API save_mural.php (a través de onSaveMural prop)
+  const handleSaveBookInfo = async () => {
+    // Prepara los datos para enviar a la API.
+    // Es CRUCIAL incluir los datos de las mujeres del mural aquí si tu script save_mural.php
+    // elimina y re-inserta todas las mujeres cada vez que se llama.
+    const dataToSave = {
+       // El ID del registro final_mural (donde ahora también guardas título y autor)
+       id: bookData?.finalMural?.id, // Pasa el ID si existe (de los datos cargados)
+       title: bookInfo.title, // Del estado local del formulario
+       author: bookInfo.author, // Del estado local del formulario
+       // Incluye los datos de las mujeres del mural si tu API save_mural.php los necesita
+       // para no borrarlos al guardar solo la información del libro.
+       // Basado en el save_mural.php que te di, parece que sí elimina/re-inserta mujeres,
+       // así que debes incluirlas.
+       women: bookData?.finalMural?.women || [] // Incluye la lista actual de mujeres del estado bookData
+    };
 
-    // Si onUpdateData es la única forma de actualizar el estado en App.jsx:
-     onUpdateData({
-       ...bookData, // Asegúrate de mantener el resto de los datos
-       title: bookInfo.title,
-       author: bookInfo.author,
-       // Puedes añadir lógica aquí para guardar solo la info del libro a la API si es necesario
-       // Por ahora, solo actualiza el estado local en App.jsx
-     });
+    try {
+       // Llama a la función onSaveMural pasada desde App.jsx,
+       // que a su vez llama a la API save_mural.php
+       await onSaveMural(dataToSave);
 
-    toast({
-      title: "📚 Información del libro actualizada",
-      description: "Los cambios han sido guardados (solo localmente por ahora, implementa la API).", // Ajusta el mensaje
-    });
-     // Considera llamar a una API saveBookInfo aquí
+       // onSaveMural (en App.jsx) ya se encarga de recargar los datos
+       // y mostrar el toast de éxito.
 
+    } catch (error) {
+       console.error("Error saving book info in AdminPanel:", error);
+       // El toast de error también se manejará en App.jsx.
+    }
   };
+  // FIN handleSaveBookInfo
+
 
   const handleDeleteChapter = async (chapterId) => {
-    // Llama a la función de la API para eliminar el capítulo
+    // Llama a la función de la API para eliminar el capítulo (pasada como prop)
     try {
        await onDeleteChapter(chapterId);
       // La recarga de datos y el toast se manejan en App.jsx después de que onDeleteChapter se complete
@@ -90,7 +106,7 @@ export function AdminPanel({ bookData, onUpdateData, onClose, allChapters, onSav
   };
 
   const handleUpdateChapter = async (updatedChapter) => {
-     // Llama a la función de la API para guardar/actualizar el capítulo
+     // Llama a la función de la API para guardar/actualizar el capítulo (pasada como prop)
      try {
         await onSaveChapter(updatedChapter);
         // La recarga de datos y el toast se manejan en App.jsx después de que onSaveChapter se complete
@@ -102,19 +118,26 @@ export function AdminPanel({ bookData, onUpdateData, onClose, allChapters, onSav
   };
 
   const handleUpdateMural = async (updatedMural) => {
-     // Llama a la función de la API para guardar el mural
+     // Esta función ya llama a la función onSaveMural pasada desde App.jsx
+     // que a su vez llama a la API save_mural.php.
+     // Es CRUCIAL que si save_mural.php espera recibir title y author
+     // cada vez que se llama (porque sobreescribe esos campos),
+     // los incluyas aquí desde el estado bookInfo.
+     const dataToSave = {
+        id: bookData?.finalMural?.id, // Pasa el ID si existe
+        // Incluye title y author para asegurar que no se sobrescriben a null
+        // si el mural se guarda sin que la información del libro se guarde primero.
+        title: bookInfo.title,
+        author: bookInfo.author,
+        ...updatedMural // Esto ya incluye los datos de las mujeres
+     };
+
      try {
-         // Aquí también necesitas el ID del mural para pasárselo a la función de API
-         // Asumiendo que bookData.finalMural ya tiene el ID si existe
-         const muralDataToSave = {
-             id: bookData?.finalMural?.id, // Pasa el ID si existe
-             ...updatedMural
-         };
-        await onSaveMural(muralDataToSave);
-        // La recarga de datos y el toast se manejan en App.jsx después de que onSaveMural se complete
+        await onSaveMural(dataToSave);
+        // La recarga de datos y el toast se manejan en App.jsx.
      } catch (error) {
         console.error("Error saving mural in AdminPanel:", error);
-        // El toast de error se maneja en App.jsx
+        // El toast de error se maneja en App.jsx.
      }
   };
 
@@ -209,7 +232,7 @@ export function AdminPanel({ bookData, onUpdateData, onClose, allChapters, onSav
                  // Pasa las funciones de guardado/cancelado al ChapterEditor
                 <ChapterEditor
                   chapter={editingChapter}
-                  onSave={handleUpdateChapter} // Usa la función que llama a la API
+                  onSave={handleUpdateChapter} // Usa la función que llama a la API save_chapter
                   onCancel={() => setEditingChapter(null)} // Cierra el editor sin guardar
                   allChapters={allChapters} // Pasa allChapters para el selector de enlaces
                 />
@@ -260,7 +283,7 @@ export function AdminPanel({ bookData, onUpdateData, onClose, allChapters, onSav
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
-                              onClick={() => handleDeleteChapter(chapter.id)} // Usa la función que llama a la API
+                              onClick={() => handleDeleteChapter(chapter.id)} // Usa la función que llama a la API delete_chapter
                               size="sm"
                               variant="outline"
                               className="button-destructive border-red-500/70 text-red-300 hover:bg-red-600/30"
@@ -288,7 +311,7 @@ export function AdminPanel({ bookData, onUpdateData, onClose, allChapters, onSav
                {/* Pasa la función de guardado al MuralEditor */}
               <MuralEditor
                 mural={bookData?.finalMural} // Usa optional chaining por si finalMural es null
-                onSave={handleUpdateMural} // Usa la función que llama a la API
+                onSave={handleUpdateMural} // Usa la función que llama a la API save_mural (o la función combinada si hiciste una)
               />
             </motion.div>
           )}
