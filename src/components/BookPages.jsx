@@ -16,15 +16,15 @@ const formatTime = (time) => {
 };
 
 export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSize, navigateToChapter }) {
-  // Verificación al inicio
   if (!bookData || !bookData.chapters) {
-    return <div>Cargando datos del libro...</div>;
+    return <div className="text-black p-4 sm:p-8 md:p-12 h-full w-full overflow-y-auto" style={{ fontSize: `${fontSize}px` }}>Cargando datos del libro...</div>;
   }
 
-  const isFinalMuralPage = currentPage === (bookData.chapters?.length || 0);
+  const isFinalMuralPage = currentPage === bookData.chapters.length;
   const [isFlipping, setIsFlipping] = useState(false);
   const [historyStack, setHistoryStack] = useState([]);
   const [hasSong, setHasSong] = useState(false);
+  const [direction, setDirection] = useState(0);
 
   // Audio player state
   const audioRef = useRef(null);
@@ -41,9 +41,7 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
   });
 
   const totalPages = bookData.chapters.length + 1;
-  const currentChapterData = currentPage < bookData.chapters.length
-    ? bookData.chapters[currentPage]
-    : null;
+  const currentChapterData = currentPage < bookData.chapters.length ? bookData.chapters[currentPage] : null;
 
   // Persist mute and volume settings
   useEffect(() => {
@@ -54,13 +52,10 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
     localStorage.setItem('audioVolume', volume.toString());
   }, [volume]);
 
-  // Audio effect with improved handling
+  // Audio effect
   useEffect(() => {
     if (!audioRef.current) return;
-
     const audio = audioRef.current;
-    
-    // Check if current chapter has a song
     const songAvailable = Boolean(currentChapterData?.songUrl);
     setHasSong(songAvailable);
 
@@ -71,12 +66,10 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
       return;
     }
 
-    // Audio event handlers
     const setAudioData = () => {
       setDuration(audio.duration);
       setCurrentTime(audio.currentTime);
     };
-    
     const setAudioTime = () => setCurrentTime(audio.currentTime);
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
@@ -93,7 +86,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
       });
     };
 
-    // Add event listeners
     audio.addEventListener('loadeddata', setAudioData);
     audio.addEventListener('timeupdate', setAudioTime);
     audio.addEventListener('play', handlePlay);
@@ -101,26 +93,19 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
     audio.addEventListener('volumechange', handleVolumeChange);
     audio.addEventListener('error', handleError);
 
-    // Load and play song if different from current
     if (audio.src !== currentChapterData.songUrl) {
       audio.src = currentChapterData.songUrl;
       audio.load();
     }
 
     audio.currentTime = currentChapterData.songStartTime || 0;
-    
-    // Try to play if not muted
     if (!isMuted) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.warn("Autoplay failed:", error);
-          // Show UI for manual play
-        });
+        playPromise.catch(error => console.warn("Autoplay failed:", error));
       }
     }
 
-    // Cleanup
     return () => {
       audio.removeEventListener('loadeddata', setAudioData);
       audio.removeEventListener('timeupdate', setAudioTime);
@@ -131,7 +116,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
     };
   }, [currentPage, currentChapterData, isMuted]);
 
-  // Update volume and mute state
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -139,7 +123,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
     }
   }, [volume, isMuted]);
 
-  // Audio control functions
   const togglePlayPause = () => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -173,7 +156,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
     }
   };
 
-  // Navigation functions
   const handleNavigation = (targetChapterId) => {
     if (!targetChapterId) {
       toast({
@@ -206,49 +188,113 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
 
   const handlePageChange = (newPage) => {
     if (newPage < 0 || newPage >= totalPages || isFlipping) return;
-
     setIsFlipping(true);
+    setDirection(newPage > currentPage ? 1 : -1);
     setTimeout(() => {
       onPageChange(newPage);
       setIsFlipping(false);
-    }, 700);
+    }, 1000);
   };
-
-  const isFinalPage = currentPage === totalPages - 1;
-
-  // Animation variants
-  const pageVariants = {
-    initial: (direction) => ({ 
-      opacity: 0, 
-      x: direction > 0 ? "100%" : "-100%", 
-      rotateY: direction > 0 ? -15 : 15 
-    }),
-    animate: { 
-      opacity: 1, 
-      x: 0, 
-      rotateY: 0, 
-      transition: { duration: 0.6, ease: "easeOut" } 
-    },
-    exit: (direction) => ({ 
-      opacity: 0, 
-      x: direction > 0 ? "-100%" : "100%", 
-      rotateY: direction > 0 ? 15 : -15, 
-      transition: { duration: 0.6, ease: "easeIn" } 
-    })
-  };
-
-  const [direction, setDirection] = useState(0);
 
   const paginate = (newPage) => {
-    setDirection(newPage > currentPage ? 1 : -1);
     handlePageChange(newPage);
   };
 
-  // Determine if we should show the audio player
+  const isFinalPage = currentPage === totalPages - 1;
   const shouldShowPlayer = hasSong && currentChapterData?.songUrl;
 
+  // Render a single page's content
+  const renderPageContent = (pageIndex) => {
+    if (pageIndex === totalPages - 1) {
+      return (
+        <div className="p-4 sm:p-8 md:p-12 h-full w-full overflow-y-auto text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>
+          <FinalMural 
+            women={bookData.finalMural?.women || []} 
+            authorReveal={bookData.finalMural?.author || ''} 
+            fontSize={fontSize}
+          />
+        </div>
+      );
+    } else if (pageIndex < bookData.chapters.length) {
+      const chapterData = bookData.chapters[pageIndex];
+      return (
+        <div className="p-4 sm:p-8 md:p-12 h-full w-full relative overflow-y-auto text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>
+          <motion.h2
+            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 md:mb-8 text-center"
+            style={{ 
+              fontFamily: 'Cinzel, serif', 
+              color: 'hsl(var(--primary))', 
+              textShadow: '1px 1px 3px hsla(var(--background), 0.7)', 
+              fontSize: `calc(${fontSize}px * 1.8)` 
+            }}
+            initial={{ y: -20, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }} 
+            transition={{ delay: 0.2 }}
+          >
+            {chapterData.title}
+          </motion.h2>
+          <motion.div 
+            className="w-24 sm:w-32 md:w-48 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent mx-auto mb-6 sm:mb-8 md:mb-12"
+            initial={{ scaleX: 0 }} 
+            animate={{ scaleX: 1}} 
+            transition={{ delay: 0.4, duration: 0.8 }}
+          ></motion.div>
+          <motion.div 
+            className="manuscript-text leading-relaxed max-w-4xl mx-auto text-black"
+            style={{ fontSize: `${fontSize}px`, color: '#000000' }}
+            initial={{ y: 20, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }} 
+            transition={{ delay: 0.6 }}
+          >
+            <span className="ornate-capital text-black" style={{ fontSize: `calc(${fontSize}px * 2.5)`, color: '#000000' }}>
+              {chapterData.content.charAt(0)}
+            </span>
+            {chapterData.content.slice(1)}
+          </motion.div>
+          {chapterData.postIts?.map((postIt, index) => (
+            <motion.div 
+              key={postIt.id} 
+              initial={{ scale: 0, rotate: -180 }} 
+              animate={{ scale: 1, rotate: postIt.rotation || -2.5 }} 
+              transition={{ delay: 1 + index * 0.2, type: "spring" }} 
+              onClick={() => handleNavigation(postIt.linkToChapterId)} 
+              className={postIt.linkToChapterId ? "cursor-pointer" : ""}
+            >
+              <PostIt {...postIt} baseFontSize={fontSize} />
+            </motion.div>
+          ))}
+          {chapterData.photos?.map((photo, index) => (
+            <motion.div 
+              key={photo.id} 
+              initial={{ scale: 0, rotate: 180 }} 
+              animate={{ scale: 1, rotate: photo.rotation || 3.5 }} 
+              transition={{ delay: 1.5 + index * 0.3, type: "spring" }} 
+              onClick={() => handleNavigation(photo.linkToChapterId)} 
+              className={photo.linkToChapterId ? "cursor-pointer" : ""}
+            >
+              <PolaroidPhoto {...photo} baseFontSize={fontSize} imageUrl={photo.url} link={photo.link} />
+            </motion.div>
+          ))}
+          {chapterData.cornerNotes?.map((note, index) => (
+            <motion.div 
+              key={note.id} 
+              initial={{ opacity: 0, scale: 0.5 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              transition={{ delay: 1.8 + index * 0.2, type: "spring" }} 
+              onClick={() => handleNavigation(note.linkToChapterId)} 
+              className={note.linkToChapterId ? "cursor-pointer" : ""}
+            >
+              <CornerNote {...note} baseFontSize={fontSize} />
+            </motion.div>
+          ))}
+        </div>
+      );
+    }
+    return <div className="p-4 sm:p-8 md:p-12 h-full w-full overflow-y-auto text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>.</div>;
+  };
+
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-black p-2 sm:p-4 z-40">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-black p-2 sm:p-4 z-40" style={{ fontSize: `${fontSize}px` }}>
       <audio ref={audioRef} />
       
       {/* Top navigation buttons */}
@@ -263,7 +309,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
           <X className="w-4 h-4 sm:mr-2" /> 
           <span className="hidden sm:inline">Cerrar</span>
         </Button>
-        
         {historyStack.length > 0 && (
           <Button 
             onClick={goBackInHistory} 
@@ -278,7 +323,7 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
         )}
       </div>
 
-      {/* Audio Player - Improved version */}
+      {/* Audio Player */}
       {shouldShowPlayer && (
         <div className="audio-player fixed bottom-4 left-1/2 -translate-x-1/2 z-50 p-3 rounded-lg shadow-xl bg-black/80 backdrop-blur-sm border border-purple-500/50 flex items-center gap-3">
           <Button 
@@ -290,7 +335,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </Button>
-          
           <Button 
             onClick={restartSong} 
             size="icon" 
@@ -300,7 +344,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
           >
             <Rewind className="w-5 h-5" />
           </Button>
-          
           <div className="flex items-center gap-2">
             <span className="time-display text-xs text-purple-300 min-w-[80px] text-center">
               {formatTime(currentTime)} / {formatTime(duration)}
@@ -314,7 +357,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
               aria-label="Progreso de la canción"
             />
           </div>
-          
           <Button 
             onClick={() => setIsMuted(!isMuted)} 
             size="icon" 
@@ -324,7 +366,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
           >
             {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
           </Button>
-          
           <Slider
             value={[isMuted ? 0 : volume]}
             max={1}
@@ -343,110 +384,41 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
         </div>
       </div>
 
-      {/* Book content */}
-      <div className="relative w-full h-[calc(100%-4rem)] sm:h-[calc(100%-5rem)] max-w-none sm:max-w-7xl aspect-auto sm:aspect-[4/3] perspective-1500 mt-12 sm:mt-16">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
-          <motion.div
-            key={currentPage}
-            custom={direction}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="parchment w-full h-full rounded-lg relative overflow-hidden flex items-center justify-center shadow-2xl"
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            {isFinalPage ? (
-              <div className="p-4 sm:p-8 md:p-12 h-full w-full overflow-y-auto" style={{ fontSize: `${fontSize}px` }}>
-                <FinalMural 
-                  women={bookData.finalMural?.women || []} 
-                  authorReveal={bookData.finalMural?.author || ''} 
-                />
-              </div>
-            ) : currentChapterData ? (
-              <div className="p-4 sm:p-8 md:p-12 h-full w-full relative overflow-y-auto" style={{ fontSize: `${fontSize}px` }}>
-                <motion.h2
-                  className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 md:mb-8 text-center"
-                  style={{ 
-                    fontFamily: 'Cinzel, serif', 
-                    color: 'hsl(var(--primary))', 
-                    textShadow: '1px 1px 3px hsla(var(--background), 0.7)', 
-                    fontSize: `calc(${fontSize}px * 1.8)` 
-                  }}
-                  initial={{ y: -20, opacity: 0 }} 
-                  animate={{ y: 0, opacity: 1 }} 
-                  transition={{ delay: 0.2 }}
-                >
-                  {currentChapterData.title}
-                </motion.h2>
+      {/* Book container */}
+      <div className="book-container relative w-full h-[calc(100%-4rem)] sm:h-[calc(100%-5rem)] max-w-7xl perspective-1500 mt-12 sm:mt-16">
+        <div className="book w-full h-full flex justify-center items-center">
+          {/* Left page */}
+          <div className="page left-page bg-white shadow-lg text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>
+            {currentPage > 0 ? renderPageContent(currentPage - 1) : <div className="p-4 sm:p-8 md:p-12 h-full w-full overflow-y-auto text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>.</div>}
+          </div>
+          
+          {/* Right page */}
+          <div className="page right-page bg-white shadow-lg text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>
+            {renderPageContent(currentPage)}
+          </div>
 
-                <motion.div 
-                  className="w-24 sm:w-32 md:w-48 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent mx-auto mb-6 sm:mb-8 md:mb-12"
-                  initial={{ scaleX: 0 }} 
-                  animate={{ scaleX: 1 }} 
-                  transition={{ delay: 0.4, duration: 0.8 }}
-                ></motion.div>
-
-                <motion.div 
-                  className="manuscript-text leading-relaxed max-w-4xl mx-auto"
-                  initial={{ y: 20, opacity: 0 }} 
-                  animate={{ y: 0, opacity: 1 }} 
-                  transition={{ delay: 0.6 }}
-                >
-                  <span className="ornate-capital" style={{ fontSize: `calc(${fontSize}px * 2.5)` }}>
-                    {currentChapterData.content.charAt(0)}
-                  </span>
-                  {currentChapterData.content.slice(1)}
-                </motion.div>
-
-                {/* Interactive elements */}
-                {currentChapterData.postIts?.map((postIt, index) => (
-                  <motion.div 
-                    key={postIt.id} 
-                    initial={{ scale: 0, rotate: -180 }} 
-                    animate={{ scale: 1, rotate: postIt.rotation || -2.5 }} 
-                    transition={{ delay: 1 + index * 0.2, type: "spring" }} 
-                    onClick={() => handleNavigation(postIt.linkToChapterId)} 
-                    className={postIt.linkToChapterId ? "cursor-pointer" : ""}
-                  >
-                    <PostIt {...postIt} baseFontSize={fontSize} />
-                  </motion.div>
-                ))}
-                
-                {currentChapterData.photos?.map((photo, index) => (
-                  <motion.div 
-                    key={photo.id} 
-                    initial={{ scale: 0, rotate: 180 }} 
-                    animate={{ scale: 1, rotate: photo.rotation || 3.5 }} 
-                    transition={{ delay: 1.5 + index * 0.3, type: "spring" }} 
-                    onClick={() => handleNavigation(photo.linkToChapterId)} 
-                    className={photo.linkToChapterId ? "cursor-pointer" : ""}
-                  >
-                    <PolaroidPhoto
-                      {...photo}
-                      baseFontSize={fontSize}
-                      imageUrl={photo.url}
-                      link={photo.link}
-                    />
-                  </motion.div>
-                ))}
-                
-                {currentChapterData.cornerNotes?.map((note, index) => (
-                  <motion.div 
-                    key={note.id} 
-                    initial={{ opacity: 0, scale: 0.5 }} 
-                    animate={{ opacity: 1, scale: 1 }} 
-                    transition={{ delay: 1.8 + index * 0.2, type: "spring" }} 
-                    onClick={() => handleNavigation(note.linkToChapterId)} 
-                    className={note.linkToChapterId ? "cursor-pointer" : ""}
-                  >
-                    <CornerNote {...note} baseFontSize={fontSize} />
-                  </motion.div>
-                ))}
-              </div>
-            ) : null}
-          </motion.div>
-        </AnimatePresence>
+          {/* Flipping page */}
+          <AnimatePresence initial={false}>
+            {isFlipping && (
+              <motion.div
+                key={`flipping-${currentPage}`}
+                className={`page flipping-page bg-white shadow-lg text-black ${direction > 0 ? 'right-page' : 'left-page'}`}
+                initial={{ rotateY: direction > 0 ? 0 : -180 }}
+                animate={{ rotateY: direction > 0 ? -180 : 0 }}
+                exit={{ rotateY: direction > 0 ? -180 : 0 }}
+                transition={{ duration: 1, ease: 'easeInOut' }}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="page-front bg-white text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>
+                  {direction > 0 ? renderPageContent(currentPage) : currentPage > 0 ? renderPageContent(currentPage - 1) : <div className="p-4 sm:p-8 md:p-12 h-full w-full overflow-y-auto text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>.</div>}
+                </div>
+                <div className="page-back bg-white text-black" style={{ fontSize: `${fontSize}px`, color: '#000000' }}>
+                  {direction > 0 ? renderPageContent(currentPage + 1) : renderPageContent(currentPage)}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Navigation buttons */}
         <div className="absolute top-1/2 -translate-y-1/2 -left-4 sm:-left-8 md:-left-12">
@@ -461,7 +433,6 @@ export function BookPages({ bookData, currentPage, onPageChange, onClose, fontSi
             <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
           </Button>
         </div>
-        
         <div className="absolute top-1/2 -translate-y-1/2 -right-4 sm:-right-8 md:-right-12">
           <Button 
             onClick={() => paginate(currentPage + 1)} 
